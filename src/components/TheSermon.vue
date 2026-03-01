@@ -324,6 +324,64 @@ const toggleSeries = (seriesName) => {
   expandedSeries.value[seriesName] = !expandedSeries.value[seriesName];
 };
 
+const handlePlay = (sermonTitle) => {
+  console.log('Playing sermon:', sermonTitle);
+  // TODO: Implement audio player modal or inline player
+  alert(`Playing: ${sermonTitle}`);
+};
+
+const clearSearch = () => {
+  searchQuery.value = '';
+};
+
+const handleDownload = async (sermon) => {
+  try {
+    // Get the audio URL from the sermon object
+    const audioUrl = getAudioUrl(sermon.audioUrl);
+    
+    if (!audioUrl) {
+      console.error('No audio URL available for this sermon');
+      alert('Audio file not available for download');
+      return;
+    }
+
+    console.log('Downloading audio from:', audioUrl);
+
+    // Fetch the audio file
+    const response = await fetch(audioUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.statusText}`);
+    }
+
+    // Get the blob
+    const blob = await response.blob();
+    
+    // Create a download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename with sermon title and correct extension
+    const extension = getAudioExtension(sermon.audioUrl, sermon.audioPath);
+    const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${extension}`;
+    link.download = filename;
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('Download started successfully');
+  } catch (error) {
+    console.error('Error downloading audio:', error);
+    alert('Failed to download audio. Please try again or contact support.');
+  }
+};
+
 const sectionStyle = {
   paddingTop: '6rem',
   paddingBottom: '6rem',

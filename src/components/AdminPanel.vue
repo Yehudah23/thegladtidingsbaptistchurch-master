@@ -274,6 +274,14 @@
 
               <div :style="sermonActionsStyle" class="sermon-actions">
                 <button
+                  @click="downloadAudio(sermon)"
+                  :style="downloadButtonAdminStyle"
+                  title="Download Audio"
+                  class="download-button-admin"
+                >
+                  📥 Download
+                </button>
+                <button
                   @click="editSermon(index)"
                   :style="editButtonStyle"
                   title="Edit"
@@ -553,7 +561,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import { API_ENDPOINTS } from '@/api/config';
+import API_BASE_URL, { API_ENDPOINTS } from '@/api/config';
 
 const router = useRouter();
 const activeTab = ref('upload');
@@ -956,6 +964,83 @@ const cancelEditSermon = () => {
   }
   
   uploadStatus.value = { message: '', type: '' };
+};
+
+const downloadAudio = async (sermon) => {
+  try {
+    // Get the audio URL
+    let audioUrl = sermon.audioUrl;
+    
+    if (!audioUrl) {
+      uploadStatus.value = {
+        message: 'No audio file available for this sermon',
+        type: 'error'
+      };
+      setTimeout(() => {
+        uploadStatus.value = { message: '', type: '' };
+      }, 3000);
+      return;
+    }
+
+    // Ensure the URL is absolute
+    if (!audioUrl.startsWith('http://') && !audioUrl.startsWith('https://')) {
+      if (audioUrl.startsWith('/storage/')) {
+        audioUrl = `${API_BASE_URL}${audioUrl}`;
+      } else {
+        audioUrl = `${API_BASE_URL}/storage/${audioUrl}`;
+      }
+    }
+
+    console.log('Downloading audio from:', audioUrl);
+
+    // Fetch the audio file
+    const response = await fetch(audioUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.statusText}`);
+    }
+
+    // Get the blob
+    const blob = await response.blob();
+    
+    // Create a download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename with sermon title
+    const extension = audioUrl.match(/\.(mp3|wav|m4a|ogg)(\?.*)?$/i)?.[1] || 'mp3';
+    const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
+    link.download = filename;
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    uploadStatus.value = {
+      message: '✓ Download started successfully',
+      type: 'success'
+    };
+    
+    setTimeout(() => {
+      uploadStatus.value = { message: '', type: '' };
+    }, 2000);
+  } catch (error) {
+    console.error('Error downloading audio:', error);
+    
+    uploadStatus.value = {
+      message: 'Failed to download audio. Please try again.',
+      type: 'error'
+    };
+    
+    setTimeout(() => {
+      uploadStatus.value = { message: '', type: '' };
+    }, 4000);
+  }
 };
 
 const deleteSermon = async (index) => {
@@ -1608,7 +1693,21 @@ const sermonDescStyle = {
 const sermonActionsStyle = {
   display: 'flex',
   gap: '0.75rem',
-  marginTop: 'auto'
+  marginTop: 'auto',
+  flexWrap: 'wrap'
+};
+
+const downloadButtonAdminStyle = {
+  flex: 1,
+  padding: '0.65rem 1rem',
+  backgroundColor: '#dbeafe',
+  color: '#1d4ed8',
+  border: '2px solid #bfdbfe',
+  borderRadius: '0.5rem',
+  fontWeight: '600',
+  fontSize: '0.9rem',
+  cursor: 'pointer',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
 };
 
 const editButtonStyle = {
@@ -1818,6 +1917,13 @@ const saveSettingsButtonStyle = {
   background-color: #1d4ed8;
   transform: scale(1.1);
   box-shadow: 0 12px 32px -5px rgba(37, 99, 235, 0.5);
+}
+
+.download-button-admin:hover {
+  background-color: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+  transform: translateY(-2px);
 }
 
 .edit-button:hover {
