@@ -887,7 +887,7 @@ const uploadSermon = async () => {
       errorMessage += error.response?.data?.message || `Server error: ${error.response.status}`;
       console.error('Server response data:', error.response.data);
     } else if (error.request) {
-      errorMessage += 'Cannot connect to server. Make sure backend is running on port 8002.';
+      errorMessage += 'Cannot connect to server. Make sure backend is configured correctly.';
       console.error('No response received:', error.request);
     } else {
       errorMessage += error.message || 'Please check your connection and try again.';
@@ -1143,7 +1143,7 @@ const saveBlogPost = async () => {
     if (error.response) {
       errorMessage += error.response?.data?.message || `Server error: ${error.response.status}`;
     } else if (error.request) {
-      errorMessage += 'Cannot connect to server. Make sure backend is running on port 8002.';
+      errorMessage += 'Cannot connect to server. Make sure backend is configured correctly.';
     } else {
       errorMessage += error.message || 'Please try again.';
     }

@@ -2,6 +2,11 @@
 
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
 
+// Log the API URL for debugging - shows in browser console
+if (typeof window !== 'undefined') {
+  console.log(`[API Configuration] Using backend: ${API_BASE_URL}`);
+}
+
 export const API_ENDPOINTS = {
 
   ADMIN_LOGIN: `${API_BASE_URL}/api/admin/login`,
