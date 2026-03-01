@@ -11,7 +11,7 @@ const isPlaceholderValue = (value = '') => {
   );
 };
 
-const rawEnvApiBase = process.env.VUE_APP_API_BASE_URL;
+const rawEnvApiBase = (process.env.VUE_APP_API_BASE_URL || '').trim();
 const resolvedFallback = process.env.NODE_ENV === 'production'
   ? PRODUCTION_FALLBACK_API
   : DEVELOPMENT_FALLBACK_API;
