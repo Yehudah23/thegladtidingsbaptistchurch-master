@@ -202,6 +202,26 @@ const getImageUrl = (url) => {
   return `${API_BASE_URL}/storage/${url}`;
 };
 
+const getAudioUrl = (url) => {
+  if (!url) return null;
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  if (url.startsWith('/storage/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+
+  return `${API_BASE_URL}/storage/${url}`;
+};
+
+const getAudioExtension = (audioUrl, audioPath) => {
+  const source = audioPath || audioUrl || '';
+  const match = source.match(/\.(mp3|wav|m4a|ogg)(\?.*)?$/i);
+  return match ? `.${match[1].toLowerCase()}` : '.mp3';
+};
+
 const handleImageError = (event) => {
   console.warn('Failed to load image, using default');
   event.target.src = defaultImage.value;
@@ -230,7 +250,8 @@ const loadSermons = async () => {
         description: sermon.description,
         thumbnail: sermon.thumbnail_url || sermon.thumbnail || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
         category: sermon.category,
-        audioUrl: sermon.audio_url || sermon.audio
+        audioUrl: sermon.audio_url || sermon.audio,
+        audioPath: sermon.audio_path || ''
       }));
     } else if (Array.isArray(response.data)) {
       sermons.value = response.data.map(sermon => ({
@@ -243,7 +264,8 @@ const loadSermons = async () => {
         description: sermon.description,
         thumbnail: sermon.thumbnail_url || sermon.thumbnail || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
         category: sermon.category,
-        audioUrl: sermon.audio_url || sermon.audio
+        audioUrl: sermon.audio_url || sermon.audio,
+        audioPath: sermon.audio_path || ''
       }));
     }
     loading.value = false;
@@ -713,39 +735,32 @@ const handlePlay = (title) => {
 };
 
 const handleDownload = async (sermon) => {
-  if (!sermon.audioUrl) {
+  const resolvedAudioUrl = getAudioUrl(sermon.audioUrl);
+
+  if (!resolvedAudioUrl) {
     alert('Audio file not available for this sermon.');
     return;
   }
 
   try {
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = sermon.audioUrl;
-    
-    // Generate filename from sermon title
-    const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${sermon.speaker.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`;
-    link.download = filename;
-    
-    // For external URLs, we need to fetch and create a blob
-    if (sermon.audioUrl.startsWith('http')) {
-      const response = await fetch(sermon.audioUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      link.href = url;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up the blob URL
-      window.URL.revokeObjectURL(url);
-    } else {
-      // For local files, just trigger download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const extension = getAudioExtension(resolvedAudioUrl, sermon.audioPath);
+    const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${sermon.speaker.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${extension}`;
+
+    const response = await fetch(resolvedAudioUrl);
+    if (!response.ok) {
+      throw new Error(`Download failed with status ${response.status}`);
     }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
     
     console.log('Downloading:', sermon.title);
   } catch (error) {
