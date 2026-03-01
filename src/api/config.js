@@ -1,8 +1,24 @@
 const PRODUCTION_FALLBACK_API = 'https://gladtidingschurchapi.loca.lt';
 const DEVELOPMENT_FALLBACK_API = 'http://127.0.0.1:8001';
 
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL ||
-  (process.env.NODE_ENV === 'production' ? PRODUCTION_FALLBACK_API : DEVELOPMENT_FALLBACK_API);
+const isPlaceholderValue = (value = '') => {
+  const normalized = String(value).toLowerCase();
+  return (
+    normalized.includes('your_backend_domain') ||
+    normalized.includes('your-backend-domain') ||
+    normalized.includes('your-backend') ||
+    normalized.includes('localhost')
+  );
+};
+
+const rawEnvApiBase = process.env.VUE_APP_API_BASE_URL;
+const resolvedFallback = process.env.NODE_ENV === 'production'
+  ? PRODUCTION_FALLBACK_API
+  : DEVELOPMENT_FALLBACK_API;
+
+const API_BASE_URL = rawEnvApiBase && !isPlaceholderValue(rawEnvApiBase)
+  ? rawEnvApiBase
+  : resolvedFallback;
 
 // Log the API URL for debugging - shows in browser console
 if (typeof window !== 'undefined') {
