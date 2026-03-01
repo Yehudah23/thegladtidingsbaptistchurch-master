@@ -2,8 +2,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run serve",
   "installCommand": "npm install",
-  "framework": "vue",
-  "env": {
-    "VUE_APP_API_BASE_URL": "@VUE_APP_API_BASE_URL"
-  }
+  "framework": "vue"
 }
