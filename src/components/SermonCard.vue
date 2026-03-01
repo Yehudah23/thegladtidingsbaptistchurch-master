@@ -1,6 +1,16 @@
 <template>
   <div :style="cardWrapperStyle">
     <template v-if="!compact">
+      <!-- Sermon Image -->
+      <div :style="imageContainerStyle" class="sermon-image-container">
+        <img 
+          :src="getImageUrl(sermon.thumbnail)" 
+          :alt="sermon.title" 
+          :style="imageStyle" 
+          class="sermon-image"
+          @error="handleImageError"
+        />
+      </div>
       
       <div :style="{ padding: '1.5rem 1.5rem 0.75rem' }">
         <span :style="{ backgroundColor: '#1d4ed8', color: '#ffffff', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }">{{ sermon.series }}</span>
@@ -35,18 +45,45 @@
 </template>
 
 <script setup>
-import { defineEmits, defineProps, computed } from 'vue';
+import { defineEmits, defineProps, computed, ref } from 'vue';
 
 const props = defineProps({
   sermon: {
     type: Object,
     required: true
   },
-  compact: { type: Boolean, default: false }
-  , showFullImage: { type: Boolean, default: false }
+  compact: { type: Boolean, default: false },
+  showFullImage: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['play', 'download']);
+
+const defaultImage = ref('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400');
+const currentImageUrl = ref(null);
+
+const getImageUrl = (url) => {
+  if (!url) return defaultImage.value;
+  
+  // If it's already a full URL, return it
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If it's a relative path from Laravel storage
+  if (url.startsWith('/storage/')) {
+    const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
+    return `${apiBaseUrl}${url}`;
+  }
+  
+  // Fallback: assume it's a storage path
+  const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
+  return `${apiBaseUrl}/storage/${url}`;
+};
+
+const handleImageError = (event) => {
+  console.warn('Failed to load image:', currentImageUrl.value);
+  event.target.src = defaultImage.value;
+};
 
 const handlePlay = () => {
   emit('play', props.sermon.title);
@@ -62,12 +99,31 @@ const cardWrapperStyle = computed(() => ({
   boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
   transition: 'box-shadow 0.3s ease'
 }));
+
+const imageContainerStyle = {
+  position: 'relative',
+  overflow: 'hidden',
+  height: '200px',
+  backgroundColor: '#f3f4f6'
+};
+
+const imageStyle = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+};
 </script>
 
 <style scoped>
 div:hover {
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
 }
+
+.sermon-image-container:hover .sermon-image {
+  transform: scale(1.05);
+}
+
 button:hover {
   background-color: #1e40af;
   transform: translateY(-2px);

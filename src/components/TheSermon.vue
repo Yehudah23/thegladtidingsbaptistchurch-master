@@ -67,7 +67,13 @@
         <div v-for="(sermon, index) in filteredSermons" :key="sermon.id" :style="cardStyle" class="sermon-card-premium" :class="`sermon-card-${index}`">
           
           <div :style="imageContainerStyle" class="image-container-premium">
-            <img :src="sermon.thumbnail" :alt="sermon.title" :style="imageStyle" class="sermon-image" />
+            <img 
+              :src="getImageUrl(sermon.thumbnail)" 
+              :alt="sermon.title" 
+              :style="imageStyle" 
+              class="sermon-image"
+              @error="handleImageError"
+            />
             <div :style="overlayStyle" class="overlay-premium">
               <button :style="playButtonStyle" @click="handlePlay(sermon.title)" class="play-button-premium">
                 ▶
@@ -123,7 +129,12 @@
             <div v-if="expandedSeries[seriesName]" :style="seriesMessagesStyle" class="series-messages">
               <div v-for="sermon in seriesSermons" :key="sermon.id" :style="seriesCardStyle" class="series-message-card">
                 <div :style="seriesCardImageStyle">
-                  <img :src="sermon.thumbnail" :alt="sermon.title" :style="seriesCardImgStyle" />
+                  <img 
+                    :src="getImageUrl(sermon.thumbnail)" 
+                    :alt="sermon.title" 
+                    :style="seriesCardImgStyle"
+                    @error="handleImageError"
+                  />
                   <div :style="seriesCardOverlayStyle" class="series-card-overlay">
                     <button :style="seriesPlayButtonStyle" @click="handlePlay(sermon.title)" class="series-play-button">
                       ▶
@@ -169,6 +180,33 @@ const activeTab = ref("all");
 const expandedSeries = ref({});
 const loading = ref(true);
 const sermons = ref([]);
+
+const defaultImage = ref('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400');
+
+// Convert relative image URLs to absolute URLs
+const getImageUrl = (url) => {
+  if (!url) return defaultImage.value;
+  
+  // If it's already a full URL, return it
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If it's a relative path from Laravel storage
+  if (url.startsWith('/storage/')) {
+    const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
+    return `${apiBaseUrl}${url}`;
+  }
+  
+  // Fallback: assume it's a storage path
+  const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
+  return `${apiBaseUrl}/storage/${url}`;
+};
+
+const handleImageError = (event) => {
+  console.warn('Failed to load image, using default');
+  event.target.src = defaultImage.value;
+};
 
 // Load sermons from API
 const loadSermons = async () => {
