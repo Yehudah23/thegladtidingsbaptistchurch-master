@@ -3,11 +3,7 @@
   "devCommand": "npm run serve",
   "installCommand": "npm install",
   "framework": "vue",
-  "env": [
-    {
-      "key": "VUE_APP_API_BASE_URL",
-      "description": "Backend API URL (e.g., https://api.thegladtidingsbaptist.org or https://your-backend.com)",
-      "value": "@VUE_APP_API_BASE_URL"
-    }
-  ]
+  "env": {
+    "VUE_APP_API_BASE_URL": "@VUE_APP_API_BASE_URL"
+  }
 }
