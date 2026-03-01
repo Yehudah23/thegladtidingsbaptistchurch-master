@@ -161,8 +161,8 @@
      
       <div v-if="!loading && activeTab !== 'series' && filteredSermons.length === 0" :style="emptyStateStyle" class="empty-state-animate">
         <div :style="emptyIconStyle">🎤</div>
-        <p :style="emptyTextStyle">No messages found matching your search</p>
-        <button @click="clearSearch" :style="clearButtonStyle" class="clear-button-premium">
+        <p :style="emptyTextStyle">{{ emptyStateMessage }}</p>
+        <button v-if="searchQuery" @click="clearSearch" :style="clearButtonStyle" class="clear-button-premium">
           Clear Search
         </button>
       </div>
@@ -173,12 +173,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../api/config';
+import API_BASE_URL, { API_ENDPOINTS } from '../api/config';
 
 const searchQuery = ref("");
 const activeTab = ref("all");
 const expandedSeries = ref({});
 const loading = ref(true);
+const loadError = ref('');
 const sermons = ref([]);
 
 const defaultImage = ref('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400');
@@ -194,13 +195,11 @@ const getImageUrl = (url) => {
   
   // If it's a relative path from Laravel storage
   if (url.startsWith('/storage/')) {
-    const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
-    return `${apiBaseUrl}${url}`;
+    return `${API_BASE_URL}${url}`;
   }
   
   // Fallback: assume it's a storage path
-  const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:8001';
-  return `${apiBaseUrl}/storage/${url}`;
+  return `${API_BASE_URL}/storage/${url}`;
 };
 
 const handleImageError = (event) => {
@@ -212,6 +211,7 @@ const handleImageError = (event) => {
 const loadSermons = async () => {
   try {
     loading.value = true;
+    loadError.value = '';
     const response = await axios.get(API_ENDPOINTS.SERMONS, {
       params: {
         per_page: 100 // Load all sermons
@@ -249,8 +249,9 @@ const loadSermons = async () => {
     loading.value = false;
   } catch (error) {
     console.error('Error loading sermons:', error);
+    sermons.value = [];
+    loadError.value = 'Unable to load messages right now. Please try again shortly.';
     loading.value = false;
-    // Keep empty array if there's an error
   }
 };
 
@@ -289,6 +290,12 @@ const sermonsBySeries = computed(() => {
     grouped[series].sort((a, b) => new Date(b.date) - new Date(a.date));
   });
   return grouped;
+});
+
+const emptyStateMessage = computed(() => {
+  if (loadError.value) return loadError.value;
+  if (!searchQuery.value) return 'No messages available at the moment.';
+  return 'No messages found matching your search';
 });
 
 const toggleSeries = (seriesName) => {
