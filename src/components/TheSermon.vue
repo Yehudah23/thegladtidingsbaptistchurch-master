@@ -735,7 +735,7 @@ const handlePlay = (title) => {
 };
 
 const handleDownload = async (sermon) => {
-  const resolvedAudioUrl = getAudioUrl(sermon.audioUrl);
+  const resolvedAudioUrl = getAudioUrl(sermon.audioUrl || sermon.audioPath);
 
   if (!resolvedAudioUrl) {
     alert('Audio file not available for this sermon.');
@@ -746,26 +746,19 @@ const handleDownload = async (sermon) => {
     const extension = getAudioExtension(resolvedAudioUrl, sermon.audioPath);
     const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${sermon.speaker.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${extension}`;
 
-    const response = await fetch(resolvedAudioUrl);
-    if (!response.ok) {
-      throw new Error(`Download failed with status ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
     const link = document.createElement('a');
-    link.href = blobUrl;
+    link.href = resolvedAudioUrl;
     link.download = filename;
+    link.rel = 'noopener';
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(blobUrl);
     
-    console.log('Downloading:', sermon.title);
+    console.log('Downloading from exact URL:', resolvedAudioUrl);
   } catch (error) {
     console.error('Download error:', error);
-    alert('Failed to download the audio file. Please try again or contact support.');
+    window.open(resolvedAudioUrl, '_blank', 'noopener');
   }
 };
 
