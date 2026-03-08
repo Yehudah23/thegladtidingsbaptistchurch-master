@@ -677,11 +677,14 @@ const handleBlogImageFile = (event) => {
 // Load existing sermons and blogs
 const loadSermons = async () => {
   try {
+    console.log('[loadSermons] Fetching from:', API_ENDPOINTS.SERMONS);
     const response = await axios.get(API_ENDPOINTS.SERMONS, {
       params: {
         per_page: 1000 // Load all sermons
       }
     });
+    
+    console.log('[loadSermons] Success! Response:', response.data);
     
     // Handle paginated response
     if (response.data && response.data.data) {
@@ -712,7 +715,10 @@ const loadSermons = async () => {
       }));
     }
   } catch (error) {
-    console.error('Error loading sermons:', error);
+    console.error('[loadSermons] Error loading sermons:', error);
+    console.error('[loadSermons] Error status:', error.response?.status);
+    console.error('[loadSermons] Error message:', error.response?.data);
+    console.error('[loadSermons] Full error:', error.message);
     // Don't show error to user, just start with empty list
   }
 };

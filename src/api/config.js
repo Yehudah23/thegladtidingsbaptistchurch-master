@@ -30,6 +30,13 @@ const API_BASE_URL = rawEnvApiBase && !isPlaceholderValue(rawEnvApiBase)
 // Log the API URL for debugging - shows in browser console
 if (typeof window !== 'undefined') {
   console.log(`[API Configuration] Using backend: ${API_BASE_URL}`);
+  console.log('[DEBUG] Environment variables:', {
+    VUE_APP_API_BASE_URL: process.env.VUE_APP_API_BASE_URL,
+    VITE_API_URL: process.env.VITE_API_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    rawEnvApiBase: rawEnvApiBase,
+    isPlaceholder: isPlaceholderValue(rawEnvApiBase)
+  });
 }
 
 export const API_ENDPOINTS = {
