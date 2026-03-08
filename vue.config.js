@@ -1,4 +1,9 @@
 const { defineConfig } = require('@vue/cli-service')
+
+if (!process.env.VUE_APP_API_BASE_URL && process.env.VITE_API_URL) {
+  process.env.VUE_APP_API_BASE_URL = process.env.VITE_API_URL;
+}
+
 module.exports = defineConfig({
   transpileDependencies: true,
   pwa: {

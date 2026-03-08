@@ -787,42 +787,6 @@ const seriesDownloadButtonStyle = {
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   alignSelf: 'flex-start'
 };
-
-const handlePlay = (title) => {
-  console.log('Playing:', title);
-};
-
-const handleDownload = async (sermon) => {
-  const resolvedAudioUrl = getAudioUrl(sermon.audioUrl || sermon.audioPath);
-
-  if (!resolvedAudioUrl) {
-    alert('Audio file not available for this sermon.');
-    return;
-  }
-
-  try {
-    const extension = getAudioExtension(resolvedAudioUrl, sermon.audioPath);
-    const filename = `${sermon.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${sermon.speaker.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${extension}`;
-
-    const link = document.createElement('a');
-    link.href = resolvedAudioUrl;
-    link.download = filename;
-    link.rel = 'noopener';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log('Downloading from exact URL:', resolvedAudioUrl);
-  } catch (error) {
-    console.error('Download error:', error);
-    window.open(resolvedAudioUrl, '_blank', 'noopener');
-  }
-};
-
-const clearSearch = () => {
-  searchQuery.value = '';
-};
 </script>
 
 <style scoped>

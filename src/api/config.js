@@ -1,6 +1,13 @@
 const PRODUCTION_FALLBACK_API = 'https://gladtidingschurchapi.loca.lt';
 const DEVELOPMENT_FALLBACK_API = 'http://127.0.0.1:8001';
 
+const normalizeApiBase = (value = '') => {
+  return String(value)
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/i, '');
+};
+
 const isPlaceholderValue = (value = '') => {
   const normalized = String(value).toLowerCase();
   return (
@@ -11,7 +18,7 @@ const isPlaceholderValue = (value = '') => {
   );
 };
 
-const rawEnvApiBase = (process.env.VUE_APP_API_BASE_URL || '').trim();
+const rawEnvApiBase = normalizeApiBase(process.env.VUE_APP_API_BASE_URL || '');
 const resolvedFallback = process.env.NODE_ENV === 'production'
   ? PRODUCTION_FALLBACK_API
   : DEVELOPMENT_FALLBACK_API;
